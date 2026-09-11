@@ -21,7 +21,7 @@ No existe todavía un modelo validado capaz de afirmar una “configuración per
 
 ## Inicio local
 
-Requisitos: Node.js 24 y pnpm 10.
+Requisitos: Node.js 24 y la versión de pnpm declarada en `package.json`.
 
 ```bash
 pnpm install --frozen-lockfile
