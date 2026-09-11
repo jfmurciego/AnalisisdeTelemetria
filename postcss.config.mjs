@@ -1,1 +1,7 @@
-fatal: your current branch 'main' does not have any commits yet
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;

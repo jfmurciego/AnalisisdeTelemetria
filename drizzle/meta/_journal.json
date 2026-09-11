@@ -1,1 +1,5 @@
-fatal: your current branch 'main' does not have any commits yet
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": []
+}

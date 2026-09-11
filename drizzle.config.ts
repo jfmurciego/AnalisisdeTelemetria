@@ -1,1 +1,7 @@
-fatal: your current branch 'main' does not have any commits yet
+import { defineConfig } from "drizzle-kit";
+
+export default defineConfig({
+  out: "./drizzle",
+  schema: "./db/schema.ts",
+  dialect: "sqlite",
+});

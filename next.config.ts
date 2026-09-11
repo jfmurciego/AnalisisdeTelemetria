@@ -1,1 +1,7 @@
-fatal: your current branch 'main' does not have any commits yet
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;

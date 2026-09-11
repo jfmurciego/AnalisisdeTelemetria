@@ -1,1 +1,9 @@
-fatal: your current branch 'main' does not have any commits yet
+"SECONDS";"PID";"VALUE";"UNITS";"LATITUDE";"LONGTITUDE";
+"0.0";"Vehicle speed";"100";"km/h";"40.0000";"-4.0000";
+"0.0";"Engine fuel rate";"6.0";"L/h";"40.0000";"-4.0000";
+"0.0";"Hybrid/EV Battery System Voltage";"340";"V";"40.0000";"-4.0000";
+"0.0";"Hybrid/EV Battery System Current";"10";"A";"40.0000";"-4.0000";
+"1.0";"Vehicle speed";"101";"km/h";"40.0001";"-4.0001";
+"1.0";"Engine fuel rate";"156";"L/h";"40.0001";"-4.0001";
+"1.0";"Hybrid/EV Battery System Voltage";"338";"V";"40.0001";"-4.0001";
+"1.0";"Hybrid/EV Battery System Current";"-8";"A";"40.0001";"-4.0001";

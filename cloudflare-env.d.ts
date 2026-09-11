@@ -1,1 +1,6 @@
-fatal: your current branch 'main' does not have any commits yet
+declare namespace Cloudflare {
+  interface Env {
+    DB?: D1Database;
+    BUCKET?: R2Bucket;
+  }
+}
