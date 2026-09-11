@@ -1,0 +1,71 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/.vinext/
+/out/
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+next-env.d.ts
+*.tsbuildinfo
+/dist/
+/.wrangler/
+# Checkout-local execution profile and tool state; never publish them.
+/.sites-runtime/
+/.agents/
+/.codex/
+/outputs/
+/work/
+
+# Privacy boundary: never commit real vehicle or location data
+/data/raw/**
+/data/private/**
+/data/exports/**
+/telemetry/**
+/gps/**
+*.gpx
+*.fit
+*.tcx
+*CarScanner*.csv
+20??-??-??*.csv
+exported_records*.zip
+
+# Local secrets and credentials
+*.key
+*.p12
+*.pfx
+secrets.*
+credentials.*
+
+# Synthetic fixtures are the only CSV data allowed in Git
+!tests/fixtures/
+!tests/fixtures/**/*.csv
