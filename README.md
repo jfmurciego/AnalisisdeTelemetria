@@ -15,9 +15,9 @@ Las normaliza sobre tiempo y distancia, aplica reglas de calidad, distingue hech
 
 ## Estado
 
-Versión `0.2.0`: ingesta larga preservada, catálogo Kia versionado, inventario por PID y puertas de capacidad para impedir métricas sin cobertura suficiente. La integración de combustible, energía HV y pendiente permanece trazable y la superficie web procesa los ficheros localmente.
+Versión `0.3.0`: ingesta larga, catálogo Kia, reconstrucción temporal causal y segmentación de discontinuidades. La aplicación genera un informe local por segmento con cobertura, distancia, gasolina, consumo y estado eléctrico. Cada valor alineado conserva su instante original y antigüedad; los huecos no se interpolan.
 
-No existe todavía un modelo validado capaz de afirmar una “configuración perfecta”. Las recomendaciones permanecen provisionales hasta acumular pasadas comparables y pruebas suficientes.
+La energía HV permanece bloqueada cuando voltaje y corriente no tienen cobertura simultánea suficiente. Todavía no existe un modelo validado capaz de afirmar una “configuración perfecta”.
 
 ## Inicio local
 
@@ -48,7 +48,7 @@ flowchart TD
   H --> I["Waypoints para navegador"]
 ```
 
-La descripción completa está en [docs/architecture/overview.md](docs/architecture/overview.md).
+La descripción completa está en [docs/architecture/overview.md](docs/architecture/overview.md). La reconstrucción temporal y sus fórmulas están en [docs/domain/temporal-reconstruction.md](docs/domain/temporal-reconstruction.md).
 
 ## Privacidad
 
@@ -69,7 +69,7 @@ La aplicación procesa archivos en el navegador. El repositorio acepta exclusiva
 app/                    aplicación web
 components/             superficies y controles
 lib/domain/             modelo canónico
-lib/telemetry/          ingesta, calidad y métricas
+lib/telemetry/          ingesta, calidad, tiempo y métricas
 lib/route/              geometría, elevación y pendientes
 lib/optimizer/          recomendaciones y waypoints
 docs/architecture/      arquitectura y flujos

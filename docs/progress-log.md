@@ -1,5 +1,18 @@
 # Registro de progreso
 
+## 2026-09-14 — Módulo 2: reconstrucción temporal
+
+- Implementada alineación causal: cada valor conserva instante original y antigüedad.
+- Fijada rejilla de un segundo, caducidad de dos segundos y excepción de cinco segundos para SOC.
+- Separadas dos sesiones reales que contenían huecos de 2.208,916 y 3.327,195 segundos.
+- Prohibida la integración a través de huecos superiores a tres segundos.
+- Detectada en una sesión la oscilación de los acumuladores de distancia y gasolina.
+- Sustituida la suma de incrementos positivos por diferencia entre extremos y reconciliación independiente.
+- Reproducidos los totales privados: 103,51 km y 5,651 L en ocho segmentos con movimiento; existe además un segmento continuo de 10,6 segundos sin distancia.
+- Confirmado 5,775 L/100 km en el recorrido largo de 70,30 km.
+- Mantenida la energía HV como insuficiente por falta de cobertura continua en este paquete.
+- Añadidas pruebas sintéticas y vista web por segmento. Ninguna fila real entra en Git.
+
 ## 2026-09-13 — Módulo 1: inventario e ingesta Kia
 
 - Perfiladas localmente siete sesiones privadas: 2.581.519 filas y 50 PIDs distintos.

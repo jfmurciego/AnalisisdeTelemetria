@@ -2,11 +2,19 @@
 
 import { useMemo, useState } from "react";
 import { Activity, CarFront, CloudSun, FileUp, MapPinned, ShieldCheck } from "lucide-react";
-import { parseCarScannerLongCsv } from "@/lib/telemetry/parser";
-import { applyQualityRules } from "@/lib/telemetry/quality";
-import { integrateEnergy } from "@/lib/telemetry/metrics";
+import { parseCarScannerLongRecords } from "@/lib/telemetry/inventory";
+import { applyLongRecordQuality } from "@/lib/telemetry/record-quality";
+import { buildSegmentReports, type SegmentReport } from "@/lib/telemetry/report";
+import { reconstructTimeline } from "@/lib/telemetry/timeline";
 
-type Loaded = { name: string; samples: ReturnType<typeof applyQualityRules> };
+type Loaded = {
+  name: string;
+  validRecords: number;
+  rejectedRecords: number;
+  frameCount: number;
+  reports: SegmentReport[];
+};
+
 const stages = [
   ["Vía", "Eje, PK, elevación y pendiente multiventana", MapPinned],
   ["Vehículo", "Perfil, transmisión, relaciones y PIDs", CarFront],
@@ -14,17 +22,33 @@ const stages = [
   ["Tráfico", "Velocidad libre, incidencias y densidad", Activity],
 ] as const;
 
+function sumAvailable(reports: SegmentReport[], field: "distanceKm" | "fuelLitres"): number {
+  return reports.reduce((total, report) => total + (report.metrics[field].value ?? 0), 0);
+}
+
 export function TelemetryWorkbench() {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const summary = useMemo(() => loaded ? integrateEnergy(loaded.samples) : null, [loaded]);
-  const flagged = loaded?.samples.filter((sample) => sample.qualityFlags.length).length ?? 0;
+  const summary = useMemo(() => {
+    if (!loaded) return null;
+    const distanceKm = sumAvailable(loaded.reports, "distanceKm");
+    const fuelLitres = sumAvailable(loaded.reports, "fuelLitres");
+    return {
+      distanceKm,
+      fuelLitres,
+      consumption: distanceKm > 0 ? fuelLitres / distanceKm * 100 : undefined,
+      hvBlocked: loaded.reports.every((report) => report.metrics.batteryDischargeKwh.status === "insufficient"),
+    };
+  }, [loaded]);
 
   async function loadFile(file: File) {
     try {
-      const samples = applyQualityRules(parseCarScannerLongCsv(await file.text()));
-      if (!samples.length) throw new Error("No se encontraron muestras reconocibles.");
-      setLoaded({ name: file.name, samples });
+      const parsed = parseCarScannerLongRecords(await file.text());
+      if (!parsed.length) throw new Error("No se encontraron registros válidos.");
+      const quality = applyLongRecordQuality(parsed);
+      const timeline = reconstructTimeline(quality.records);
+      const reports = buildSegmentReports(quality.records, timeline);
+      setLoaded({ name: file.name, validRecords: quality.records.length, rejectedRecords: quality.rejectedRows, frameCount: timeline.frames.length, reports });
       setError(null);
     } catch (reason) {
       setLoaded(null);
@@ -38,7 +62,7 @@ export function TelemetryWorkbench() {
         <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-5">
           <div className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-400 text-[#071019]"><Activity size={22} /></span>
-            <div><p className="text-sm font-semibold tracking-wide">ANÁLISIS DE TELEMETRÍA</p><p className="text-xs text-slate-400">Laboratorio de ruta · v0.1.0</p></div>
+            <div><p className="text-sm font-semibold tracking-wide">ANÁLISIS DE TELEMETRÍA</p><p className="text-xs text-slate-400">Reconstrucción temporal · v0.3.0</p></div>
           </div>
           <div className="flex items-center gap-2 text-xs text-emerald-300"><ShieldCheck size={16} /> Procesamiento local</div>
         </div>
@@ -67,11 +91,30 @@ export function TelemetryWorkbench() {
 
         <div className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Metric label="Muestras alineadas" value={loaded ? loaded.samples.length.toLocaleString("es-ES") : "—"} detail={loaded?.name ?? "Sin archivo"}/>
-            <Metric label="Tiempo cubierto" value={summary ? `${(summary.coveredSeconds / 60).toFixed(1)} min` : "—"} detail="Huecos >3 s excluidos"/>
-            <Metric label="Gasolina integrada" value={summary ? `${summary.fuelLitres.toFixed(3)} L` : "—"} detail="Solo caudal válido"/>
-            <Metric label="Muestras marcadas" value={loaded ? String(flagged) : "—"} detail="Nunca convertidas en cero"/>
+            <Metric label="Registros válidos" value={loaded ? loaded.validRecords.toLocaleString("es-ES") : "—"} detail={loaded ? `${loaded.rejectedRecords} descartados` : "Sin archivo"}/>
+            <Metric label="Segmentos continuos" value={loaded ? String(loaded.reports.length) : "—"} detail={loaded ? `${loaded.frameCount.toLocaleString("es-ES")} instantes alineados` : "Corte tras huecos >30 s"}/>
+            <Metric label="Distancia" value={summary ? `${summary.distanceKm.toFixed(2)} km` : "—"} detail="Acumulador reconciliado con velocidad"/>
+            <Metric label="Consumo de gasolina" value={summary?.consumption !== undefined ? `${summary.consumption.toFixed(2)} L/100 km` : "—"} detail={summary ? `${summary.fuelLitres.toFixed(3)} L integrados` : "Datos insuficientes"}/>
           </div>
+
+          {loaded && <div className="panel overflow-hidden">
+            <div className="border-b border-white/10 px-5 py-4"><p className="eyebrow">Informe por continuidad</p><h2 className="mt-1 text-lg font-semibold">{loaded.name}</h2></div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] text-left text-sm">
+                <thead className="bg-white/[0.03] text-xs text-slate-400"><tr><th className="px-5 py-3">Segmento</th><th className="px-5 py-3">Duración</th><th className="px-5 py-3">Distancia</th><th className="px-5 py-3">Gasolina</th><th className="px-5 py-3">Consumo</th><th className="px-5 py-3">Electricidad</th></tr></thead>
+                <tbody className="divide-y divide-white/10">
+                  {loaded.reports.map((report) => <tr key={report.segment.id}>
+                    <td className="px-5 py-3 font-medium">{report.segment.id}</td>
+                    <td className="px-5 py-3 tabular-nums">{(report.segment.durationSeconds / 60).toFixed(1)} min</td>
+                    <td className="px-5 py-3 tabular-nums">{report.metrics.distanceKm.value?.toFixed(2) ?? "insuficiente"} km</td>
+                    <td className="px-5 py-3 tabular-nums">{report.metrics.fuelLitres.value?.toFixed(3) ?? "insuficiente"} L</td>
+                    <td className="px-5 py-3 tabular-nums">{report.metrics.fuelConsumptionLPer100Km.value?.toFixed(2) ?? "insuficiente"}</td>
+                    <td className="px-5 py-3 text-slate-400">{report.metrics.batteryDischargeKwh.status === "insufficient" ? "Cobertura insuficiente" : "Provisional"}</td>
+                  </tr>)}
+                </tbody>
+              </table>
+            </div>
+          </div>}
 
           <div className="panel overflow-hidden">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
@@ -86,15 +129,13 @@ export function TelemetryWorkbench() {
                   <path d="M-20 355 C145 330 110 230 265 250 S420 325 505 205 S670 90 920 62" fill="none" stroke="url(#route)" strokeWidth="7" strokeLinecap="round"/>
                   {[150,380,585,760].map((x, i) => <g key={x}><circle cx={x} cy={[286,270,153,96][i]} r="10" fill="#071019" stroke="#f6b85f" strokeWidth="4"/><text x={x+16} y={[290,274,157,100][i]} fill="#cbd5e1" fontSize="14">WP {String(i+1).padStart(2,"0")}</text></g>)}
                 </svg>
-                <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-2 text-xs">
-                  <Legend label="Medido" color="bg-emerald-400"/><Legend label="Derivado" color="bg-amber-300"/><Legend label="Externo" color="bg-sky-400"/>
-                </div>
+                <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-2 text-xs"><Legend label="Medido" color="bg-emerald-400"/><Legend label="Derivado" color="bg-amber-300"/><Legend label="Externo" color="bg-sky-400"/></div>
               </div>
               <div className="space-y-3">
-                <Signal title="1 · Normalizar" text="Mapear PIDs, tiempos, coordenadas y unidades sin alterar el origen." state={loaded ? "listo" : "pendiente"}/>
-                <Signal title="2 · Validar" text="Invalidar picos imposibles y declarar cobertura insuficiente." state={loaded ? "listo" : "pendiente"}/>
+                <Signal title="1 · Normalizar" text="Conservar PIDs, tiempos y unidades sin alterar el origen." state={loaded ? "listo" : "pendiente"}/>
+                <Signal title="2 · Reconstruir" text="Separar discontinuidades y alinear señales con antigüedad explícita." state={loaded ? "listo" : "pendiente"}/>
                 <Signal title="3 · Contextualizar" text="Alinear vía, rasante, clima y tráfico por tiempo y posición." state="planificado"/>
-                <Signal title="4 · Recomendar" text="Generar velocidad o marcha objetivo con evidencia y versión." state="planificado"/>
+                <Signal title="4 · Recomendar" text="Generar velocidad objetivo con evidencia y versión." state="planificado"/>
               </div>
             </div>
           </div>
@@ -104,8 +145,6 @@ export function TelemetryWorkbench() {
   );
 }
 
-function Metric({ label, value, detail }: { label: string; value: string; detail: string }) {
-  return <div className="panel p-4"><p className="text-xs text-slate-500">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p><p className="mt-1 truncate text-xs text-slate-500">{detail}</p></div>;
-}
+function Metric({ label, value, detail }: { label: string; value: string; detail: string }) { return <div className="panel p-4"><p className="text-xs text-slate-500">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p><p className="mt-1 truncate text-xs text-slate-500">{detail}</p></div>; }
 function Legend({ label, color }: { label: string; color: string }) { return <div className="rounded-lg bg-[#071019]/80 px-3 py-2"><span className={`mr-2 inline-block h-2 w-2 rounded-full ${color}`}/>{label}</div>; }
 function Signal({ title, text, state }: { title: string; text: string; state: string }) { return <div className="rounded-xl border border-white/10 bg-[#091521] p-4"><div className="flex items-center justify-between gap-3"><p className="text-sm font-semibold">{title}</p><span className="text-[11px] uppercase tracking-wide text-slate-500">{state}</span></div><p className="mt-2 text-xs leading-5 text-slate-400">{text}</p></div>; }

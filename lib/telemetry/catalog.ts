@@ -21,12 +21,12 @@ export interface PidDefinition {
   source: SignalSource;
 }
 
-export const KIA_PID_CATALOG_VERSION = "0.2.0";
+export const KIA_PID_CATALOG_VERSION = "0.3.0";
 
 export const KIA_PID_CATALOG: PidDefinition[] = [
   { canonicalField: "speedKph", canonicalPid: "Vehicle speed", aliases: [], expectedUnits: ["km/h"], source: "measured" },
   { canonicalField: "rpm", canonicalPid: "Engine RPM", aliases: ["Revoluciones"], expectedUnits: ["rpm"], source: "measured" },
-  { canonicalField: "fuelRateLph", canonicalPid: "Engine fuel rate", aliases: ["Caudal combustible motor"], expectedUnits: ["L/h"], source: "measured" },
+  { canonicalField: "fuelRateLph", canonicalPid: "Engine fuel rate", aliases: ["Caudal combustible motor", "Calculated instant fuel rate"], expectedUnits: ["L/h"], source: "measured" },
   { canonicalField: "fuelUsedL", canonicalPid: "Fuel used", aliases: [], expectedUnits: ["L"], source: "application-derived" },
   { canonicalField: "distanceKm", canonicalPid: "Distance travelled", aliases: [], expectedUnits: ["km"], source: "application-derived" },
   { canonicalField: "hvVoltageV", canonicalPid: "Hybrid/EV Battery System Voltage", aliases: [], expectedUnits: ["V"], source: "measured" },
