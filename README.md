@@ -15,7 +15,7 @@ Las normaliza sobre tiempo y distancia, aplica reglas de calidad, distingue hech
 
 ## Estado
 
-Versión `0.1.0`: estructura inicial, contrato Car Scanner largo, reglas de calidad básicas, integración de combustible y energía HV, pendiente con ventana configurable, recomendador provisional y superficie web de carga local.
+Versión `0.2.0`: ingesta larga preservada, catálogo Kia versionado, inventario por PID y puertas de capacidad para impedir métricas sin cobertura suficiente. La integración de combustible, energía HV y pendiente permanece trazable y la superficie web procesa los ficheros localmente.
 
 No existe todavía un modelo validado capaz de afirmar una “configuración perfecta”. Las recomendaciones permanecen provisionales hasta acumular pasadas comparables y pruebas suficientes.
 

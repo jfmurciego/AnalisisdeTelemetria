@@ -1,0 +1,13 @@
+"SECONDS";"PID";"VALUE";"UNITS";
+"100.00";"Vehicle speed";"40";"km/h";
+"100.00";"Engine RPM";"1800";"rpm";
+"100.00";"Engine fuel rate";"2.4";"L/h";
+"100.00";"Fuel used";"0.100";"L";
+"100.05";"Hybrid/EV Battery System Voltage";"338";"V";
+"100.05";"Hybrid/EV Battery System Current";"4";"A";
+"101.00";"Vehicle speed";"42";"km/h";
+"101.00";"Engine RPM";"1850";"rpm";
+"101.00";"Engine fuel rate";"2.6";"L/h";
+"101.00";"Fuel used";"0.101";"L";
+"101.00";"Unknown; quoted PID";"7";"x";
+"invalid";"Vehicle speed";"not-a-number";"km/h";
